@@ -1,7 +1,5 @@
 import Foundation
 import ArgumentParser
-import AppKit
-import mamba
 
 @main
 struct LiveEdgeQuery: ParsableCommand {
@@ -11,44 +9,39 @@ struct LiveEdgeQuery: ParsableCommand {
     @Flag(help: "Download the last segment and save to local file")
     var writeLastSegment = false
 
+    @Option(help: "Repeat the live edge query indefinitely at the given interval in seconds")
+    var pollingInterval: TimeInterval?
+
     func run() throws {
-        let manifestService = ManifestService()
-        let latencyCalcylator = LatencyCalculator()
-        Task {
-            do {
-                let playlist = try await manifestService.manifest(for: uri)
-                let latency = try latencyCalcylator.packagerLatency(from: playlist)
-                if writeLastSegment {
-                    await downloadAndWriteLastSegment(from: playlist, recordedLatency: latency)
-                }
-                print("===")
-                print("Last segment: \(latency.lastSegmentDate)")
-                print("Now:          \(latency.nowDate)")
-                print("===")
-                print("Packager latency: \(latency.latency)")
-                print("===")
-                Self.exit(withError: nil)
-            } catch {
-                Self.exit(withError: error)
-            }
-        }
+        runTask()
         dispatchMain()
     }
 
-    private func downloadAndWriteLastSegment(
-        from playlist: HLSPlaylist,
-        recordedLatency latency: PackagerLatency
-    ) async {
-        let lastSegmentWriter = LastSegmentWriter()
-        do {
-            let fileURL = try await lastSegmentWriter.writeLastSegment(from: playlist, recordedLatency: latency)
-            NSWorkspace.shared.open(fileURL)
-            print("===")
-            print("Info: Last segment written to file \(fileURL.absoluteString).")
-        } catch {
-            print("===")
-            print("Warining: Could not write last segment to file.")
-            print("\(error)")
+    private func runTask() {
+        let runner = QueryRunner(
+            uri: uri,
+            writeLastSegment: writeLastSegment
+        )
+        Task {
+            do {
+                try await runner.run()
+                await taskFinished(withError: nil)
+            } catch {
+                await taskFinished(withError: error)
+            }
         }
+    }
+
+    private func taskFinished(withError error: Error?) async {
+        guard let pollingInterval = pollingInterval else {
+            Self.exit(withError: error)
+        }
+        error.map { print($0) }
+        do {
+            try await Task.sleep(nanoseconds: UInt64(pollingInterval * 1_000_000_000))
+        } catch {
+            Self.exit(withError: error)
+        }
+        runTask()
     }
 }
