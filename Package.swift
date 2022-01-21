@@ -10,11 +10,11 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "git@github.com:apple/swift-argument-parser.git",
+            url: "https://github.com/apple/swift-argument-parser.git",
             .upToNextMinor(from: "1.0.2")
         ),
         .package(
-            url: "git@github.com:Comcast/mamba.git",
+            url: "https://github.com/Comcast/mamba.git",
             .exact("1.5.5")
         )
     ],
