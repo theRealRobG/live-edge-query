@@ -6,12 +6,13 @@ Use this package to calculate the latency of a media playlist from the packager 
 
 The usage is as follows:
 ```
-USAGE: swift run live-edge-query <uri>
+USAGE: live-edge-query <uri> [--write-last-segment]
 
 ARGUMENTS:
   <uri>                   The URI of the live playlist
 
 OPTIONS:
+  --write-last-segment    Download the last segment and save to local file
   -h, --help              Show help information.
 ```
 
@@ -25,6 +26,19 @@ Last segment: 2022-01-21 01:26:23 +0000
 Now:          2022-01-21 01:26:44 +0000
 ===
 Packager latency: 21.24189603328705
+===
+```
+```
+% swift run live-edge-query "https://example.com/path/01.m3u8" --write-last-segment
+
+[0/0] Build complete!
+===
+Info: Last segment written to file file:///Users/me/path-to-repo/downloaded-segments/2022.01.21T10-20-13.001+0000.mp4.
+===
+Last segment: 2022-01-21 10:19:51 +0000
+Now:          2022-01-21 10:20:13 +0000
+===
+Packager latency: 21.685057997703552
 ===
 ```
 
