@@ -1,6 +1,6 @@
 import Foundation
 
-class NetworkService {
+struct NetworkService {
     func data(for url: URL) async throws -> Data? {
         try await withCheckedThrowingContinuation { continuation in
             URLSession.shared.dataTask(with: url) { data, response, error in
